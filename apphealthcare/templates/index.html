@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Healthcare Alert</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>🏥 Real-Time Alert</h1>
+
+    <input id="patient" placeholder="Patient ID" />
+    <input id="message" placeholder="Message" />
+    <select id="severity">
+        <option value="critical">Critical</option>
+        <option value="warning">Warning</option>
+        <option value="normal">Normal</option>
+    </select>
+    <button onclick="sendAlert()">Send</button>
+
+    <div id="alerts"></div>
+
+    <script>
+        const socket = io();
+
+        function sendAlert() {
+            const data = {
+                patient: document.getElementById("patient").value,
+                message: document.getElementById("message").value,
+                severity: document.getElementById("severity").value,
+            };
+            socket.emit('send_alert', data);
+        }
+
+        socket.on('receive_alert', function(data) {
+            const div = document.createElement('div');
+            div.innerText = `${data.patient} - ${data.message} (${data.severity})`;
+            document.getElementById('alerts').prepend(div);
+        });
+    </script>
+</body>
+</html>
