@@ -1,40 +1,116 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Healthcare Alert</title>
-    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+  <meta charset="UTF-8" />
+  <title>Real-Time Alert</title>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2e6ff;
+      margin: 20px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #6a0dad;
+    }
+
+    form {
+      margin-bottom: 20px;
+    }
+
+    input, select, button {
+      padding: 8px;
+      margin-right: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      background-color: #6a0dad;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #520d99;
+    }
+
+    .alert-box {
+      margin-top: 20px;
+    }
+
+    .alert {
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    .critical {
+      background-color: #ff4d4d;
+      color: white;
+    }
+
+    .warning {
+      background-color: #ffcc00;
+      color: black;
+    }
+
+    .info {
+      background-color: #4da6ff;
+      color: white;
+    }
+  </style>
 </head>
 <body>
-    <h1>🏥 Real-Time Alert</h1>
+  <h1>🩺 Real-Time Alert</h1>
 
-    <input id="patient" placeholder="Patient ID" />
-    <input id="message" placeholder="Message" />
+  <form id="alertForm">
+    <input type="text" id="patient" placeholder="Patient ID" required />
+    <input type="text" id="message" placeholder="Message" required />
     <select id="severity">
-        <option value="critical">Critical</option>
-        <option value="warning">Warning</option>
-        <option value="normal">Normal</option>
+      <option value="critical">Critical</option>
+      <option value="warning">Warning</option>
+      <option value="info">Info</option>
     </select>
-    <button onclick="sendAlert()">Send</button>
+    <button type="submit">Send</button>
+  </form>
 
-    <div id="alerts"></div>
+  <div class="alert-box" id="alertBox"></div>
 
-    <script>
-        const socket = io();
+  <script>
+    const socket = io();
 
-        function sendAlert() {
-            const data = {
-                patient: document.getElementById("patient").value,
-                message: document.getElementById("message").value,
-                severity: document.getElementById("severity").value,
-            };
-            socket.emit('send_alert', data);
-        }
+    document.getElementById("alertForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const patient = document.getElementById("patient").value.trim();
+      const message = document.getElementById("message").value.trim();
+      const severity = document.getElementById("severity").value;
 
-        socket.on('receive_alert', function(data) {
-            const div = document.createElement('div');
-            div.innerText = `${data.patient} - ${data.message} (${data.severity})`;
-            document.getElementById('alerts').prepend(div);
-        });
-    </script>
+      if (!patient || !message) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      socket.emit("send_alert", {
+        patient,
+        message,
+        severity
+      });
+
+      document.getElementById("patient").value = "";
+      document.getElementById("message").value = "";
+    });
+
+    socket.on("receive_alert", function (data) {
+      const alertBox = document.getElementById("alertBox");
+      const div = document.createElement("div");
+      div.classList.add("alert", data.severity);
+      div.innerHTML = `<strong>${data.patient}</strong>: ${data.message}<br><small>${data.time}</small>`;
+      alertBox.prepend(div);
+    });
+  </script>
 </body>
 </html>
